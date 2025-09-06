@@ -15,8 +15,9 @@ typedef struct framebuffer
 } framebuffer;
 
 void window_open(const char *title, size2d size);
-bool window_should_close();
-void window_close();
+bool window_should_close(void);
+void window_present(void);
+void window_close(void);
 
 void window_get_framebuffer(framebuffer* framebuffer);
 

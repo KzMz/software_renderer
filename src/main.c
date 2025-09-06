@@ -35,6 +35,8 @@ int main(void)
             }
             row += pitch;
         }
+
+        window_present();
     }
 
     window_close();

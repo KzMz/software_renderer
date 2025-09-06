@@ -11,6 +11,7 @@
 static HWND window_handle;
 static MSG last_message;
 static BITMAPINFO last_info;
+static bool is_running;
 
 static unsigned char bitmap_memory[RENDERER_MEMORY_SIZE]; // statically allocated memory
 static size2d bitmap_size;
@@ -81,14 +82,29 @@ void window_open(const char *title, size2d size)
     }
 
     ShowWindow(window_handle, SW_SHOW);
+    is_running = true;
 }
 
-bool window_should_close()
+bool window_should_close(void)
 {
-    bool should_close = GetMessage(&last_message, NULL, 0, 0) <= 0;
-    TranslateMessage(&last_message);
-    DispatchMessageA(&last_message);
-    return should_close;
+    while (PeekMessageA(&last_message, NULL, 0, 0, PM_REMOVE))
+    {
+        TranslateMessage(&last_message);
+        DispatchMessageA(&last_message);
+    }
+    
+    return !is_running;
+}
+
+void window_present(void)
+{   
+    HDC hdc = GetDC(window_handle);
+
+    RECT rect;
+    GetClientRect(window_handle, &rect);
+    
+    update_device_context(hdc, &rect);
+    ReleaseDC(window_handle, hdc);
 }
 
 void window_get_framebuffer(framebuffer* framebuffer)
@@ -97,7 +113,7 @@ void window_get_framebuffer(framebuffer* framebuffer)
     framebuffer->size = bitmap_size;
 }
 
-void window_close()
+void window_close(void)
 {
     memset(bitmap_memory, 0, RENDERER_MEMORY_SIZE);
 }
@@ -121,9 +137,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             resize_dib(width, height);
         } break;
 
+        case WM_CLOSE:
         case WM_DESTROY:
         {
-            PostQuitMessage(0);
+            is_running = false;
         } break;
 
         case WM_PAINT:
