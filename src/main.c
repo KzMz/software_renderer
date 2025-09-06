@@ -4,36 +4,29 @@
 #define STADIUM_IMPLEMENTATION
 #include "stadium/stadium.h"
 
+#define COLOR_IMPLEMENTATION
+#include "renderer/color.h"
+
+#define VEC2_IMPLEMENTATION
+#include "renderer/vec2.h"
+
 int main(void)
 {
     window_open("Software Renderer", (size2d) { .width = 800, .height = 600 });
+
+    colorf clear_color = colorf_from_rgba(0.5f, 0.0f, 1.0f, 1.0f);
 
     framebuffer framebuffer;
     while (!window_should_close())
     {
         window_get_framebuffer(&framebuffer);
 
-        size_t pitch = framebuffer.size.width * 4;
-        unsigned char* row = framebuffer.buffer;
         for (size_t y = 0; y < framebuffer.size.height; ++y)
         {
-            unsigned char* pixel = row;
-            UNUSED(pixel);
             for(size_t x = 0; x < framebuffer.size.width; ++x)
             {
-                *pixel = 255;
-                ++pixel;
-
-                *pixel = 0;
-                ++pixel;
-
-                *pixel = 0;
-                ++pixel;
-
-                *pixel = 255;
-                ++pixel;
+                window_put_pixel(x, y, colorf_pack(clear_color));
             }
-            row += pitch;
         }
 
         window_present();

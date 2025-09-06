@@ -16,6 +16,7 @@ typedef struct framebuffer
 
 void window_open(const char *title, size2d size);
 bool window_should_close(void);
+void window_put_pixel(size_t x, size_t y, unsigned int packed_color);
 void window_present(void);
 void window_close(void);
 

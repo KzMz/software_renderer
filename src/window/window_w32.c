@@ -92,8 +92,18 @@ bool window_should_close(void)
         TranslateMessage(&last_message);
         DispatchMessageA(&last_message);
     }
-    
+
     return !is_running;
+}
+
+void window_put_pixel(size_t x, size_t y, unsigned int packed_color)
+{
+    if (x < bitmap_size.width && y < bitmap_size.height)
+    {
+        unsigned int* pixel = (unsigned int*) bitmap_memory;
+        pixel += (y * bitmap_size.width) + x;
+        *pixel = packed_color;
+    }
 }
 
 void window_present(void)
