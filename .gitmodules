@@ -1,0 +1,3 @@
+[submodule "src/stadium"]
+	path = src/stadium
+	url = https://github.com/KzMz/stadium.git
