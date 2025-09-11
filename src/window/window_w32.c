@@ -20,6 +20,7 @@ static size2d window_size;
 const char CLASS_NAME[]  = "Software Renderer Window Class";
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+void update_window_size(void);
 
 static void resize_dib(int width, int height)
 {
@@ -37,12 +38,8 @@ static void resize_dib(int width, int height)
     bitmap_size = (size2d) {width, height};
 }
 
-static void update_device_context(HDC hdc, RECT* client_rect)
+static void present_buffer(HDC hdc)
 {
-    int win_width = client_rect->right - client_rect->left;
-    int win_height = client_rect->bottom - client_rect->top;
-    window_size = (size2d) {win_width, win_height};
-
     StretchDIBits(hdc,
                   0, 0, window_size.width, window_size.height,
                   0, 0, bitmap_size.width, bitmap_size.height,
@@ -81,6 +78,9 @@ void window_open(const char *title, size2d size)
         return;
     }
 
+    window_size = size;
+    resize_dib(size.width, size.height);
+
     ShowWindow(window_handle, SW_SHOW);
     is_running = true;
 }
@@ -110,10 +110,8 @@ void window_present(void)
 {   
     HDC hdc = GetDC(window_handle);
 
-    RECT rect;
-    GetClientRect(window_handle, &rect);
-    
-    update_device_context(hdc, &rect);
+    update_window_size();
+    present_buffer(hdc);
     ReleaseDC(window_handle, hdc);
 }
 
@@ -123,9 +121,27 @@ void window_get_framebuffer(framebuffer* framebuffer)
     framebuffer->size = bitmap_size;
 }
 
+size2d window_get_framebuffer_size(void)
+{
+    return bitmap_size;
+}
+
+size2d window_get_window_size(void)
+{
+    return window_size;
+}
+
 void window_close(void)
 {
     memset(bitmap_memory, 0, RENDERER_MEMORY_SIZE);
+}
+
+void update_window_size(void)
+{
+    RECT rect;
+    GetClientRect(window_handle, &rect);
+    window_size.width = rect.right - rect.left;
+    window_size.height = rect.bottom - rect.top;
 }
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -140,11 +156,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         case WM_SIZE:
         {
-            RECT rect;
-            GetClientRect(hwnd, &rect);
-            int width = rect.right - rect.left;
-            int height = rect.bottom - rect.top;
-            resize_dib(width, height);
+            //RECT rect;
+            //GetClientRect(hwnd, &rect);
+            //int width = rect.right - rect.left;
+            //int height = rect.bottom - rect.top;
+            //resize_dib(width, height);
         } break;
 
         case WM_CLOSE:
@@ -158,10 +174,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
 
-            RECT rect;
-            GetClientRect(hwnd, &rect);
-
-            update_device_context(hdc, &rect);
+            update_window_size();
+            present_buffer(hdc);
 
             EndPaint(hwnd, &ps);
         } break;
